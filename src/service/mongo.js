@@ -1,15 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING;
-
-if (!MONGODB_URI) {
-  throw new Error("❌ MONGODB_CONNECTION_STRING is not defined in environment variables");
-}
-
-/** 
- * Global is used here to cache the connection across hot reloads in development
- * and to prevent multiple connections in serverless environments (Vercel, etc.)
- */
 let cached = global.mongoose;
 
 if (!cached) {
@@ -17,6 +7,12 @@ if (!cached) {
 }
 
 export async function dbConnect() {
+  const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING;
+
+  if (!MONGODB_URI) {
+    throw new Error("❌ MONGODB_CONNECTION_STRING is not defined in environment variables");
+  }
+
   if (cached.conn) {
     // ✅ Use existing connection
     return cached.conn;

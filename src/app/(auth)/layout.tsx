@@ -87,7 +87,7 @@ export default function AuthLayout({
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>
-                &copy; {new Date().getFullYear()} LifeSpring Limited. All rights reserved.
+                &copy; 2026 LifeSpring Limited. All rights reserved.
               </span>
             </div>
 
