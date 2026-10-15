@@ -33,20 +33,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Quick Demo Account Helper
-  const fillDemoAccount = (role: "admin" | "doctor" | "patient") => {
-    setError(null);
-    if (role === "admin") {
-      setIdentifier("admin@lifespringint.com");
-      setPassword("admin123");
-    } else if (role === "doctor") {
-      setIdentifier("doctor@lifespringint.com");
-      setPassword("123456");
-    } else if (role === "patient") {
-      setIdentifier("patient@lifespringint.com");
-      setPassword("123456");
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,40 +209,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Quick Demo Switcher Tabs */}
-          <div className="mb-6 p-2 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-1.5 px-2">
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Quick Test Role
-              </span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                Auto-fill credentials
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => fillDemoAccount("admin")}
-                className="py-1.5 px-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-none hover:shadow-sm"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount("doctor")}
-                className="py-1.5 px-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-none hover:shadow-sm"
-              >
-                Doctor
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount("patient")}
-                className="py-1.5 px-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-none hover:shadow-sm"
-              >
-                Patient
-              </button>
-            </div>
-          </div>
 
           {/* Error Alert */}
           {error && (
