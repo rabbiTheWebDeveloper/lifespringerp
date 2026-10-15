@@ -1,569 +1,336 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  BarChart2,
+  LayoutDashboard,
+  TrendingUp,
+  BarChart3,
+  Users2,
+  PlusCircle,
+  ShoppingBag,
+  HeartHandshake,
   CalendarDays,
-  Users,
-  GraduationCap,
-  BookOpen,
-  BookOpenCheck,
-  ClipboardList,
-  ClipboardCheck,
-  MessageSquare,
-  DollarSign,
-  Banknote,
-  Briefcase,
-  Bell,
   Settings,
-  Bot,
   LogOut,
   Menu,
   X,
-  ChevronRight,
   ChevronDown,
-  Shield,
-  Star,
-  FileSpreadsheet,
-  UserCog,
-  CalendarCheck,
-  FileText,
-  Activity,
-  Server,
-  ScrollText,
-  Users2,
-  Crown,
-  Mail,
-  Link2,
+  ChevronRight,
+  Bell,
+  Search,
+  ShieldCheck,
+  HeartPulse,
+  User,
   Sparkles,
 } from "lucide-react";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { PermissionProvider } from "@/context/PermissionContext";
-import { hasModuleAction } from "@/lib/permissions";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import PWAInstallBanner from "@/components/PWAInstallBanner";
-import { FajrLogo } from "@/components/FajrLogo";
+import { logout } from "@/lib/auth";
 
-// Flat nav items — each page has its own granular permission
-const sidebarNavigation = [
-  { name: "Dashboard", href: "/", icon: BarChart2, permission: "dashboard" },
-  { name: "Course Management", href: "/courses", icon: BookOpen, permission: "course-management" },
-  { name: "Classes Overview", href: "/classes", icon: CalendarDays, permission: "classrooms" },
-  { name: "TOT Quiz Management", href: "/tot-mangment", icon: BookOpenCheck, permission: "dashboard" },
-  { name: "Monthly Salary Report", href: "/salary-reports/monthly", icon: Banknote, permission: "salary-report" },
-  { name: "Salary Processing", href: "/salary", icon: DollarSign, permission: "salary-management" },
-  { name: "Task Management", href: "/tasks", icon: ClipboardCheck, permission: "task-management" },
-  { name: "Support Tickets", href: "/support", icon: MessageSquare, permission: "support-tickets" },
-  { name: "CEO Requests", href: "/ceo-requests", icon: Crown, permission: "ceo-requests" },
-  { name: "Finance & Billing", href: "/finance", icon: DollarSign, permission: "finance-billing" },
-  { name: "Role & Permission", href: "/roles", icon: Shield, permission: "roles-permissions" },
-  { name: "Global Notices", href: "/notices", icon: Bell, permission: "notice-board" },
-  { name: "Email Management", href: "/emails", icon: Mail, permission: "email-management" },
-  { name: "Settings", href: "/settings", icon: Settings, permission: "settings" },
-];
-
-// Grouped / collapsible nav sections — every child page has its own permission
-const sidebarGroups = [
-  {
-    group: "Student CRM",
-    icon: Users,
-    permission: "student-crm",
-    basePath: "/students",
-    children: [
-      { name: "Lead Management", href: "/lead", icon: Sparkles, permission: "student-crm" },
-      { name: "Student List", href: "/students", icon: Users, permission: "student-crm" },
-      { name: "Student Feedback", href: "/feedback", icon: Star, permission: "student-feedback" },
-      { name: "Affiliation Links", href: "/affiliation", icon: Link2, permission: "affiliation-links" },
-    ],
-  },
-  {
-    group: "Teacher Management",
-    icon: GraduationCap,
-    permission: "teacher-management",
-    basePath: "/teachers",
-    children: [
-      { name: "Teacher List", href: "/teachers", icon: Users, permission: "teacher-management" },
-      { name: "Teacher Schedule", href: "/teachers/schedule", icon: CalendarDays, permission: "teacher-schedule" },
-      { name: "Teacher Category", href: "/teachers/category", icon: Shield, permission: "teacher-category" },
-      { name: "Teacher Salaries", href: "/teachers/salary", icon: Banknote, permission: "teacher-salaries" },
-      { name: "Teacher Payment Info", href: "/teachers/payment-info", icon: FileSpreadsheet, permission: "teacher-payment-info" },
-      { name: "Gems Management", href: "/teachers/gems", icon: Star, permission: "teacher-gems" },
-      { name: "TOT Final Quiz", href: "/tot-mangment", icon: BookOpenCheck, permission: "teacher-management" },
-    ],
-  },
-  {
-    group: "Staff Management",
-    icon: UserCog,
-    permission: "staff-management",
-    basePath: "/staff-management",
-    children: [
-      { name: "Staff List", href: "/staff-management", icon: Users, permission: "staff-management" },
-      { name: "Attendance", href: "/staff-management/attendance", icon: CalendarCheck, permission: "staff-attendance" },
-      { name: "Leave Requests", href: "/staff-management/leave", icon: FileText, permission: "staff-leave" },
-      { name: "Payroll", href: "/staff-management/payroll", icon: Banknote, permission: "staff-payroll" },
-      { name: "Daily Reports", href: "/staff-management/daily-reports", icon: ClipboardList, permission: "daily-reports" },
-      { name: "Activity Logs", href: "/staff-management/activities", icon: Activity, permission: "activity-logs" },
-    ],
-  },
-  {
-    group: "System & Logs",
-    icon: Server,
-    permission: "system-logs",
-    basePath: "/system-health",
-    children: [
-      { name: "System Health", href: "/system-health", icon: Activity, permission: "system-health" },
-      { name: "Audit Logs", href: "/audit-logs", icon: ScrollText, permission: "audit-logs" },
-      { name: "Visitor Stats", href: "/visitor-stats", icon: Users2, permission: "visitor-stats" },
-    ],
-  },
-];
-
-function getInitials(name) {
-  if (!name) return "FA";
-  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-}
-
-export default function DashboardLayout({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
-  const [avatarError, setAvatarError] = useState(false);
-  const pathname = usePathname();
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev =>
-      prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
-    );
-  };
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [salesExpanded, setSalesExpanded] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [user, setUserState] = useState<any>(null);
 
-  // Auto-expand group if a child is active
+  // Load user data from cookies / localStorage
   useEffect(() => {
-    sidebarGroups.forEach(g => {
-      if (g.children.some(c => pathname.startsWith(c.href))) {
-        setExpandedGroups(prev => prev.includes(g.group) ? prev : [...prev, g.group]);
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        setUserState(JSON.parse(stored));
       }
-    });
+    } catch {
+      // Fallback
+    }
+  }, []);
+
+  // Auto-expand sales if we are on a sales route
+  useEffect(() => {
+    if (pathname.startsWith("/sales")) {
+      setSalesExpanded(true);
+    }
   }, [pathname]);
 
+  // Close mobile sidebar on route change
   useEffect(() => {
-    const checkAuth = () => {
-      fetch("/api/auth/me")
-        .then((r) => {
-          if (r.status === 401) {
-            window.location.href = "/login";
-            return;
-          }
-          return r.json();
-        })
-        .then((data) => {
-          if (data && data.success) setUser(data.user);
-        })
-        .catch(() => { });
-    };
-
-    checkAuth();
-    // ✅ OPTIMIZED: was 30s — caused massive function invocations on Vercel.
-    // 5 minutes is still fast enough to catch expired sessions.
-    const interval = setInterval(checkAuth, 5 * 60 * 1000);
-
-    // ── Track this admin/staff visit (fire-and-forget) ────────────────────
-    fetch("/api/track-visit", { method: "POST" }).catch(() => { });
-
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      const response = await originalFetch(...args);
-      if (response.status === 401) {
-        window.location.href = "/login";
-      }
-      return response;
-    };
-
-    return () => {
-      clearInterval(interval);
-      window.fetch = originalFetch;
-    };
-  }, []);
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    try {
+      logout();
+      await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
+    } finally {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      } else {
+        router.push("/login");
+      }
+    }
   };
 
-  // Segment-safe isActive: /teachers does NOT match /teachers-portal, and
-  // /teachers/payment-info is matched BEFORE /teachers (sorted by specificity)
-  const isActive = (href: string) =>
-    href === "/"
-      ? pathname === "/"
-      : pathname === href || pathname.startsWith(href + "/");
+  const isExactActive = (href: string) => pathname === href;
+  const isParentActive = (prefix: string) => pathname.startsWith(prefix);
 
-  // Flat nav match
-  const activeNavRoute = sidebarNavigation.find((item) => isActive(item.href));
-
-  // Group child match — sort LONGEST href first so sub-routes win over parent routes.
-  // e.g. "/teachers/payment-info" matches before "/teachers" when on that page.
-  const activeGroupChild = !activeNavRoute
-    ? [...sidebarGroups.flatMap(g => g.children)]
-      .sort((a, b) => b.href.length - a.href.length)
-      .find(c => isActive(c.href))
-    : undefined;
-  const activeGroup = activeGroupChild
-    ? sidebarGroups.find(g => g.children.some(c => isActive(c.href)))
-    : undefined;
-  // Combined for page title
-  const activeRoute = activeNavRoute || activeGroupChild;
-
-  const hasPermission = () => {
-    if (!user) return false;
-    // Students and teachers have their own dedicated portals
-    if (user.role === "student" || user.role === "teacher") return false;
-    if (user.permissions?.includes("*") || user.role === "super-admin") return true;
-    if (!activeRoute) return true; // Allow pages not in sidebar
-    // Flat nav item — check its own permission
-    if (activeNavRoute?.href === "/tasks") {
-      return true; // Any authenticated dashboard user can view and update their tasks
-    }
-    if (activeNavRoute) return hasModuleAction(user.permissions, activeNavRoute.permission, "read");
-    // Group child — check child's own permission if specified, otherwise group permission
-    if (activeGroupChild && (activeGroupChild as any).permission) {
-      return hasModuleAction(user.permissions, (activeGroupChild as any).permission, "read");
-    }
-    if (activeGroup) return hasModuleAction(user.permissions, activeGroup.permission, "read");
-    return true;
-  };
-
-  useEffect(() => {
-    if (user) {
-      // Role-based portal redirection
-      if (user.role === "student") {
-        window.location.replace("/student");
-        return;
-      }
-      if (user.role === "teacher") {
-        window.location.replace("/teacher");
-        return;
-      }
-      if (user.role === "staff" && pathname === "/") {
-        const hasDash =
-          user.permissions?.includes("*") ||
-          user.role === "super-admin" ||
-          hasModuleAction(user.permissions, "dashboard", "read");
-        if (!hasDash) {
-          window.location.replace("/staff");
-          return;
-        }
-      }
-
-      if (pathname === "/") {
-        const isSuper = user.permissions?.includes("*") || user.role === "super-admin";
-        const hasDash = hasModuleAction(user.permissions, "dashboard", "read");
-        if (!isSuper && !hasDash) {
-          const firstAllowedFlat = sidebarNavigation.find(item =>
-            item.href !== "/" && hasModuleAction(user.permissions, item.permission, "read")
-          );
-          const firstAllowedChild = sidebarGroups.flatMap(g => g.children).find(c =>
-            hasModuleAction(user.permissions, c.permission, "read")
-          );
-          const target = firstAllowedFlat?.href || firstAllowedChild?.href;
-          if (target) {
-            router.replace(target);
-          }
-        }
-      }
-    }
-  }, [user, pathname, router]);
+  const salesSubItems = [
+    { name: "Dashboard", href: "/sales/dashboard", icon: BarChart3 },
+    { name: "Lead", href: "/sales/lead", icon: Users2 },
+    { name: "New Sales", href: "/sales/new-sales", icon: PlusCircle },
+    { name: "Sales", href: "/sales", icon: ShoppingBag },
+    { name: "After Sales", href: "/sales/after-sales", icon: HeartHandshake },
+  ];
 
   return (
     <ThemeProvider>
-      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#04070f]">
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
+      <div className="min-h-screen flex bg-slate-50 dark:bg-[#070b12] text-slate-900 dark:text-slate-100 font-sans selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-300">
+        {/* ── Mobile Sidebar Backdrop ──────────────────────────────────────── */}
+        {mobileOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           />
         )}
 
-        {/* Sidebar */}
+        {/* ── Sidebar Navigation ───────────────────────────────────────────── */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#060b18] border-r border-gray-200 dark:border-white/[0.06] transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
+          className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-white dark:bg-[#0B111E] border-r border-slate-200/80 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 ease-in-out shrink-0 ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
         >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-white/[0.06] flex-shrink-0">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <img
-              src="/icon-192.png"
-              alt="Fajr Academy"
-              className="w-8 h-8 rounded-lg object-cover shadow-md group-hover:scale-105 transition-transform"
-            />
-            <span className="text-lg font-bold text-[#0B1A45] dark:text-white tracking-tight">
-              FAJR <span className="font-normal opacity-80">Academy</span>
-            </span>
-          </Link>
-          <button
-            className="lg:hidden p-1 text-gray-400 hover:text-gray-600 rounded-md"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-          {/* User Card at TOP */}
-          {user && (
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.06] flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-amber-900/10 dark:to-yellow-900/5">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-shrink-0">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.fullName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/40 dark:border-amber-500/40 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-sm font-bold shadow-lg border-2 border-amber-400/30">
-                      {getInitials(user.fullName)}
-                    </div>
-                  )}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white dark:border-[#060b18] rounded-full" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{user.fullName}</p>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 capitalize font-medium">{user.role?.replace("-", " ")}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Nav */}
-          <nav className="p-3 space-y-0.5 flex-1 overflow-y-auto">
-            {/* ── Dashboard (Flat nav item) ── */}
-            {sidebarNavigation.filter(item => {
-              if (item.href !== "/") return false;
-              if (!user) return false;
-              if (user.permissions?.includes("*") || user.role === "super-admin") return true;
-              return hasModuleAction(user.permissions, item.permission, "read");
-            }).map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${active
-                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/30 shadow-sm"
-                      : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:text-gray-900 dark:hover:text-slate-200"
-                    }`}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${active ? "text-amber-600 dark:text-amber-400" : "text-gray-400 dark:text-slate-500 group-hover:text-gray-600 dark:group-hover:text-slate-300"
-                    }`} />
-                  <span className="truncate flex-1">{item.name}</span>
-                  {active && <ChevronRight className="w-3.5 h-3.5 ml-1 text-amber-400 dark:text-amber-500" />}
-                </Link>
-              );
-            })}
-
-            {/* ── Grouped / collapsible sections ── */}
-            {sidebarGroups.filter(g => {
-              if (!user) return false;
-              if (user.permissions?.includes("*") || user.role === "super-admin") return true;
-              const hasGroupPerm = hasModuleAction(user.permissions, g.permission, "read");
-              const hasAnyChildPerm = g.children.some((child: any) =>
-                child.permission && hasModuleAction(user.permissions, child.permission, "read")
-              );
-              return hasGroupPerm || hasAnyChildPerm;
-            }).map((group) => {
-              const GroupIcon = group.icon;
-              const isExpanded = expandedGroups.includes(group.group);
-              const isGroupActive = group.children.some(c => isActive(c.href));
-              return (
-                <div key={group.group}>
-                  {/* Group header */}
-                  <button
-                    onClick={() => toggleGroup(group.group)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${isGroupActive
-                        ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/30"
-                        : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:text-gray-900 dark:hover:text-slate-200"
-                      }`}
+          {/* Top Brand Section */}
+          <div>
+            <div className="h-16 px-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="relative h-9 w-36 flex items-center">
+                  <Image
+                    src="/images/lifespring-logo.png"
+                    alt="LifeSpring"
+                    width={144}
+                    height={36}
+                    priority
+                    className="object-contain dark:brightness-110"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = "none";
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                  <div
+                    style={{ display: "none" }}
+                    className="items-center gap-2 font-bold text-base text-emerald-700 dark:text-emerald-400"
                   >
-                    <GroupIcon className={`w-5 h-5 flex-shrink-0 ${isGroupActive ? "text-amber-600 dark:text-amber-400" : "text-gray-400 dark:text-slate-500 group-hover:text-gray-600 dark:group-hover:text-slate-300"
-                      }`} />
-                    <span className="truncate flex-1 text-left">{group.group}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
-                      }`} />
-                  </button>
-
-                  {/* Children */}
-                  {isExpanded && (
-                    <div className="ml-4 mt-0.5 border-l-2 border-amber-100 dark:border-amber-800/30 pl-3 space-y-0.5">
-                      {group.children.filter((child: any) => {
-                        if (!user) return false;
-                        if (user.permissions?.includes("*") || user.role === "super-admin") return true;
-                        if (child.permission) return hasModuleAction(user.permissions, child.permission, "read");
-                        return true;
-                      }).map((child) => {
-                        const ChildIcon = child.icon;
-                        const active = isActive(child.href);
-
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setSidebarOpen(false)}
-                            className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all group ${active
-                                ? "bg-amber-50 dark:bg-amber-900/15 text-amber-700 dark:text-amber-300"
-                                : "text-gray-500 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:text-gray-800 dark:hover:text-slate-200"
-                              }`}
-                          >
-                            <ChildIcon className={`w-4 h-4 flex-shrink-0 ${active ? "text-amber-500 dark:text-amber-400" : "text-gray-400 dark:text-slate-600 group-hover:text-gray-600 dark:group-hover:text-slate-300"
-                              }`} />
-                            <span className="truncate flex-1">{child.name}</span>
-                            {active && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
+                    <HeartPulse className="w-5 h-5 text-emerald-600" />
+                    <span>LifeSpring ERP</span>
+                  </div>
                 </div>
-              );
-            })}
-
-            {/* ── Other Flat nav items ── */}
-            {sidebarNavigation.filter(item => {
-              if (item.href === "/") return false;
-              if (!user) return false;
-              if (user.permissions?.includes("*") || user.role === "super-admin") return true;
-              if (item.href === "/tasks") {
-                return true; // Show Task Management to all dashboard users
-              }
-              return hasModuleAction(user.permissions, item.permission, "read");
-            }).map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${active
-                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white"
-                    }`}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${active ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400"
-                    }`} />
-                  <span className="truncate flex-1">{item.name}</span>
-                  {active && <ChevronRight className="w-3.5 h-3.5 ml-1 text-blue-400 dark:text-blue-500" />}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Top Header */}
-          <header className="relative z-30 h-16 flex-shrink-0 bg-white dark:bg-[#060b18] border-b border-gray-200 dark:border-white/[0.06] flex items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-4">
-              <button
-                className="lg:hidden p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate hidden sm:block">
-                {activeRoute?.name || "Operations Manager Dashboard"}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <ThemeToggle />
-
-              <Link
-                href="/notifications"
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Admin
+                </span>
               </Link>
 
-              <div className="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-slate-800">
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
-                    {user?.fullName || "Loading..."}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                    {user?.role?.replace("-", " ") || "Admin"}
-                  </p>
-                </div>
-                <div className="relative">
-                  {user?.avatar && !avatarError ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.fullName}
-                      className="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-slate-800 shadow-sm"
-                      onError={() => setAvatarError(true)}
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-semibold text-sm">
-                      {getInitials(user?.fullName)}
-                    </div>
-                  )}
-                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full" />
-                </div>
+              {/* Close Button on Mobile */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label="Close Sidebar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav Menu */}
+            <div className="px-3.5 py-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-170px)]">
+              {/* Dashboard */}
+              <Link
+                href="/"
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isExactActive("/")
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4 shrink-0" />
+                <span>Dashboard</span>
+              </Link>
+
+              {/* Sales Collapsible Group */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setSalesExpanded(!salesExpanded)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    isParentActive("/sales")
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <span>Sales</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                      5
+                    </span>
+                    {salesExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Sub Items (Lead, After Sales, New Sales, Sales, Dashboard) */}
+                {salesExpanded && (
+                  <div className="ml-5 pl-3 border-l-2 border-emerald-500/20 dark:border-emerald-500/10 space-y-1 mt-1 animate-in slide-in-from-top-1 duration-200">
+                    {salesSubItems.map((item) => {
+                      const SubIcon = item.icon;
+                      const active = isExactActive(item.href);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                            active
+                              ? "bg-emerald-600 text-white shadow-sm font-semibold"
+                              : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/40"
+                          }`}
+                        >
+                          <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                          <span>{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
+              {/* Appointment */}
+              <Link
+                href="/appointments"
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isExactActive("/appointments")
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="w-4 h-4 shrink-0" />
+                  <span>Appointments</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300">
+                  Active
+                </span>
+              </Link>
+
+              {/* Settings */}
+              <Link
+                href="/settings"
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isExactActive("/settings")
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <Settings className="w-4 h-4 shrink-0" />
+                <span>Settings</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Bottom Section: Profile & Logout */}
+          <div className="p-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+            {/* User Mini Card */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 flex items-center gap-3">
+              <div className="relative w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                {user?.fullName ? user.fullName[0].toUpperCase() : "A"}
+                <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  {user?.fullName || "Administrator"}
+                </p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate capitalize">
+                  {user?.role || "Super Admin"}
+                </p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{loggingOut ? "Signing Out..." : "Log Out"}</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main Layout Body ─────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top Header */}
+          <header className="sticky top-0 z-30 h-16 bg-white/80 dark:bg-[#070b12]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Mobile Menu Trigger */}
               <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Open Sidebar"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+
+              <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <span>ERP</span>
+                <span>/</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-200 capitalize">
+                  {pathname === "/" ? "Dashboard" : pathname.replace("/", "").replace(/-/g, " ")}
+                </span>
+              </div>
+            </div>
+
+            {/* Header Right Actions */}
+            <div className="flex items-center gap-3">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
+              {/* Logout Button in Header */}
+              <button
+                type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
-                title="Log out"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                title="Log Out"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Logout</span>
               </button>
             </div>
           </header>
 
-          {/* Scrollable Content */}
-          <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 dark:bg-[#04070f]">
-            <div className="w-full max-w-[1650px] mx-auto space-y-5">
-              {!user ? (
-                <div className="flex justify-center p-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                </div>
-              ) : !hasPermission() ? (
-                pathname === "/" ? (
-                  <div className="flex justify-center items-center p-12 mt-10">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
-                    <p className="ml-3 text-gray-500 font-medium">Redirecting to your dashboard...</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center">
-                    <Shield className="w-16 h-16 text-gray-300 mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
-                    <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                      You do not have permission to view this page. Please contact your administrator if you believe this is a mistake.
-                    </p>
-                    <Link href="/" className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                      Go to Dashboard
-                    </Link>
-                  </div>
-                )
-              ) : (
-                <PermissionProvider user={user}>
-                  {children}
-                </PermissionProvider>
-              )}
-            </div>
+          {/* Main Content View */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            {children}
           </main>
         </div>
-        <PWAInstallBanner />
       </div>
     </ThemeProvider>
   );
