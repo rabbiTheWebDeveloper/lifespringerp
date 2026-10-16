@@ -308,7 +308,34 @@ export default function AdminLayout({
             </div>
 
             {/* Header Right Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              {/* Quick Search Trigger */}
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-400">
+                <Search className="w-3.5 h-3.5" />
+                <span>Search patients, doctors...</span>
+                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 font-bold">
+                  ⌘K
+                </kbd>
+              </div>
+
+              {/* Live Branch Pill */}
+              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Central HQ</span>
+              </div>
+
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  type="button"
+                  className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative cursor-pointer"
+                  title="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#070b12]" />
+                </button>
+              </div>
+
               {/* Theme Toggle */}
               <ThemeToggle />
 

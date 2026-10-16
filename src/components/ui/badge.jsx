@@ -27,9 +27,9 @@ const badgeVariants = cva(
 )
 
 function Badge({
-  className,
+  className = "",
   variant = "default",
-  render,
+  render = undefined,
   ...props
 }) {
   return useRender({
