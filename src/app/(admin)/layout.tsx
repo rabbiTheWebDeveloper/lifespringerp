@@ -19,12 +19,15 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Bell,
   Search,
   ShieldCheck,
   HeartPulse,
   User,
   Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -40,18 +43,38 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [user, setUserState] = useState<any>(null);
   const [avatarError, setAvatarError] = useState(false);
 
+  // Restore collapsed preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("admin_sidebar_collapsed");
+      if (saved !== null) {
+        setCollapsed(saved === "true");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const toggleSidebar = () => {
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setMobileOpen((prev) => !prev);
     } else {
-      setDesktopSidebarOpen((prev) => !prev);
+      setCollapsed((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem("admin_sidebar_collapsed", String(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
     }
   };
 
@@ -165,22 +188,75 @@ export default function AdminLayout({
           className={`fixed lg:sticky top-0 left-0 z-50 h-screen bg-white dark:bg-[#0B111E] border-r border-slate-200/80 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
             mobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
           } ${
-            desktopSidebarOpen
-              ? "lg:w-72"
-              : "lg:w-0 lg:-translate-x-full lg:overflow-hidden lg:border-none"
+            collapsed ? "lg:w-[74px]" : "lg:w-72"
           }`}
         >
           {/* Top Brand Section & User Profile */}
           <div className="shrink-0">
-            <div className="h-16 px-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="relative h-9 w-36 flex items-center">
+            {/* 1. Brand Section */}
+            {!collapsed ? (
+              <div className="h-16 px-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative h-9 w-36 flex items-center">
+                    <Image
+                      src="/images/lifespring-logo.png"
+                      alt="LifeSpring"
+                      width={144}
+                      height={36}
+                      priority
+                      className="object-contain dark:brightness-110"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                    <div
+                      style={{ display: "none" }}
+                      className="items-center gap-2 font-bold text-base text-emerald-700 dark:text-emerald-400"
+                    >
+                      <HeartPulse className="w-5 h-5 text-emerald-600" />
+                      <span>LifeSpring ERP</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    Admin
+                  </span>
+                </Link>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    title="Collapse sidebar (Show icons only)"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileOpen(false)}
+                    className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    aria-label="Close Sidebar"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Collapsed Brand: Icon only */
+              <div className="h-16 flex items-center justify-center border-b border-slate-100 dark:border-slate-800/80">
+                <Link
+                  href="/"
+                  className="flex items-center justify-center p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="LifeSpring ERP (Click to expand)"
+                >
                   <Image
-                    src="/images/lifespring-logo.png"
+                    src="/images/lifespring-icon.png"
                     alt="LifeSpring"
-                    width={144}
-                    height={36}
-                    priority
+                    width={32}
+                    height={32}
                     className="object-contain dark:brightness-110"
                     onError={(e) => {
                       const target = e.currentTarget;
@@ -191,89 +267,104 @@ export default function AdminLayout({
                   />
                   <div
                     style={{ display: "none" }}
-                    className="items-center gap-2 font-bold text-base text-emerald-700 dark:text-emerald-400"
+                    className="w-8 h-8 rounded-xl bg-emerald-600 text-white items-center justify-center font-bold text-xs"
                   >
-                    <HeartPulse className="w-5 h-5 text-emerald-600" />
-                    <span>LifeSpring ERP</span>
+                    LS
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* 2. User Profile Section */}
+            {!collapsed ? (
+              /* Expanded: Image, Name, Role & ID */
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/40 dark:from-[#0c1424] dark:via-[#0c121e] dark:to-amber-950/20">
+                <div className="flex items-center gap-3">
+                  {/* Circular Avatar with Gold Ring & Live Green Dot */}
+                  <div className="relative shrink-0">
+                    {user?.avatar && !avatarError ? (
+                      <img
+                        src={user.avatar}
+                        alt={displayName}
+                        onError={() => setAvatarError(true)}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/90 dark:border-amber-400/80 shadow-md p-[1px] bg-white dark:bg-slate-900"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-amber-400/90 dark:border-amber-400/80">
+                        {getInitials(displayName)}
+                      </div>
+                    )}
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full shadow-sm" />
+                  </div>
+
+                  {/* User Details: Name, Role & ID */}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight leading-tight">
+                      {displayName}
+                    </p>
+                    
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold capitalize leading-none">
+                        {displayRole}
+                      </span>
+                      <span className="text-[10px] text-slate-300 dark:text-slate-600 leading-none">•</span>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 leading-none">
+                        ID: {displayId}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  Admin
-                </span>
-              </Link>
-
-              {/* Close / Collapse Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setDesktopSidebarOpen(false);
-                }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                aria-label="Close Sidebar"
-                title="Collapse Sidebar"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* ── User Card at Sidebar TOP ── */}
-            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/40 dark:from-[#0c1424] dark:via-[#0c121e] dark:to-amber-950/20">
-              <div className="flex items-center gap-3">
-                {/* Circular Avatar with Gold Ring & Live Green Dot */}
-                <div className="relative shrink-0">
+              </div>
+            ) : (
+              /* Collapsed: Just the Avatar Icon with gold ring & green dot */
+              <div className="py-3 flex flex-col items-center justify-center border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-b from-blue-50/50 via-indigo-50/20 to-transparent dark:from-[#0c1424] dark:to-transparent">
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(false)}
+                  className="relative cursor-pointer group"
+                  title={`${displayName} • ${displayRole} (ID: ${displayId}) - Click to expand`}
+                >
                   {user?.avatar && !avatarError ? (
                     <img
                       src={user.avatar}
                       alt={displayName}
                       onError={() => setAvatarError(true)}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/90 dark:border-amber-400/80 shadow-md p-[1px] bg-white dark:bg-slate-900"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/90 dark:border-amber-400/80 shadow-md p-[1px] bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-amber-400/90 dark:border-amber-400/80">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-amber-400/90 dark:border-amber-400/80 group-hover:scale-105 transition-transform">
                       {getInitials(displayName)}
                     </div>
                   )}
-                  {/* Live Status Indicator Dot */}
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full shadow-sm" />
-                </div>
-
-                {/* User Details: Name, Role & ID */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight leading-tight">
-                    {displayName}
-                  </p>
-                  
-                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold capitalize leading-none">
-                      {displayRole}
-                    </span>
-                    <span className="text-[10px] text-slate-300 dark:text-slate-600 leading-none">•</span>
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 leading-none">
-                      ID: {displayId}
-                    </span>
-                  </div>
-                </div>
+                </button>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Nav Menu */}
-          <div className="px-3.5 py-4 space-y-1.5 overflow-y-auto flex-1">
-              {/* Dashboard */}
-              <Link
-                href="/"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isExactActive("/")
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
-                <span>Dashboard</span>
-              </Link>
+          <div className={`py-4 space-y-1.5 overflow-y-auto flex-1 ${collapsed ? "px-2" : "px-3.5"}`}>
+            {/* Dashboard */}
+            <Link
+              href="/"
+              title={collapsed ? "Dashboard" : undefined}
+              className={`flex items-center rounded-xl text-xs font-semibold transition-all ${
+                collapsed
+                  ? "justify-center w-11 h-11 mx-auto"
+                  : "gap-3 px-3.5 py-2.5"
+              } ${
+                isExactActive("/")
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              {!collapsed && <span>Dashboard</span>}
+            </Link>
 
-              {/* Sales Collapsible Group */}
+            {/* Sales Group */}
+            {!collapsed ? (
+              /* Expanded Sales Group */
               <div className="pt-1">
                 <button
                   type="button"
@@ -300,7 +391,7 @@ export default function AdminLayout({
                   </div>
                 </button>
 
-                {/* Sub Items (Lead, After Sales, New Sales, Sales, Dashboard) */}
+                {/* Sub Items */}
                 {salesExpanded && (
                   <div className="ml-5 pl-3 border-l-2 border-emerald-500/20 dark:border-emerald-500/10 space-y-1 mt-1 animate-in slide-in-from-top-1 duration-200">
                     {salesSubItems.map((item) => {
@@ -324,49 +415,81 @@ export default function AdminLayout({
                   </div>
                 )}
               </div>
-
-              {/* Appointment */}
+            ) : (
+              /* Collapsed Sales: Icon only */
               <Link
-                href="/appointments"
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isExactActive("/appointments")
+                href="/sales/dashboard"
+                title="Sales & Pipeline (5 items)"
+                className={`flex items-center justify-center w-11 h-11 mx-auto rounded-xl text-xs font-semibold transition-all relative ${
+                  isParentActive("/sales")
                     ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <CalendarDays className="w-4 h-4 shrink-0" />
-                  <span>Appointments</span>
-                </div>
+                <TrendingUp className="w-4 h-4 shrink-0" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#0B111E]" />
+              </Link>
+            )}
+
+            {/* Appointments */}
+            <Link
+              href="/appointments"
+              title={collapsed ? "Appointments (Active)" : undefined}
+              className={`flex items-center rounded-xl text-xs font-semibold transition-all ${
+                collapsed
+                  ? "justify-center w-11 h-11 mx-auto relative"
+                  : "justify-between px-3.5 py-2.5"
+              } ${
+                isExactActive("/appointments")
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <CalendarDays className="w-4 h-4 shrink-0" />
+                {!collapsed && <span>Appointments</span>}
+              </div>
+              {!collapsed ? (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300">
                   Active
                 </span>
-              </Link>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-[#0B111E]" />
+              )}
+            </Link>
 
-              {/* Settings */}
-              <Link
-                href="/settings"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isExactActive("/settings")
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <Settings className="w-4 h-4 shrink-0" />
-                <span>Settings</span>
-              </Link>
-            </div>
+            {/* Settings */}
+            <Link
+              href="/settings"
+              title={collapsed ? "Settings" : undefined}
+              className={`flex items-center rounded-xl text-xs font-semibold transition-all ${
+                collapsed
+                  ? "justify-center w-11 h-11 mx-auto"
+                  : "gap-3 px-3.5 py-2.5"
+              } ${
+                isExactActive("/settings")
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              {!collapsed && <span>Settings</span>}
+            </Link>
+          </div>
 
           {/* Bottom Section: Logout */}
-          <div className="p-3.5 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
+          <div className={`border-t border-slate-100 dark:border-slate-800/80 shrink-0 ${collapsed ? "p-2 flex justify-center" : "p-3.5"}`}>
             <button
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-[0.98] cursor-pointer"
+              title={collapsed ? "Log Out" : undefined}
+              className={`flex items-center justify-center rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-[0.98] cursor-pointer ${
+                collapsed ? "w-11 h-11 p-0" : "w-full gap-2 py-2.5 px-3"
+              }`}
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>{loggingOut ? "Signing Out..." : "Log Out"}</span>
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              {!collapsed && <span>{loggingOut ? "Signing Out..." : "Log Out"}</span>}
             </button>
           </div>
         </aside>
@@ -376,16 +499,19 @@ export default function AdminLayout({
           {/* Top Header */}
           <header className="sticky top-0 z-30 h-16 bg-white/80 dark:bg-[#070b12]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Mobile Menu Trigger */}
-              {/* Header Menu Trigger (Desktop & Mobile) */}
+              {/* Header Menu / Sidebar Toggle (Desktop & Mobile) */}
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center"
                 aria-label="Toggle Sidebar Navigation"
-                title="Toggle Sidebar (Logo & User Details)"
+                title={collapsed ? "Expand sidebar (Show names)" : "Collapse sidebar (Icons only)"}
               >
-                <Menu className="w-5 h-5" />
+                {collapsed ? (
+                  <PanelLeftOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <PanelLeftClose className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                )}
               </button>
 
               <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
