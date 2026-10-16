@@ -278,7 +278,7 @@ export default function AdminLayout({
             {/* 2. User Profile Section */}
             {!collapsed ? (
               /* Expanded: Image, Name, Role & ID */
-              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/40 dark:from-[#0c1424] dark:via-[#0c121e] dark:to-amber-950/20">
+              <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0B111E]">
                 <div className="flex items-center gap-3">
                   {/* Circular Avatar with Gold Ring & Live Green Dot */}
                   <div className="relative shrink-0">
@@ -317,7 +317,7 @@ export default function AdminLayout({
               </div>
             ) : (
               /* Collapsed: Just the Avatar Icon with gold ring & green dot */
-              <div className="py-3 flex flex-col items-center justify-center border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-b from-blue-50/50 via-indigo-50/20 to-transparent dark:from-[#0c1424] dark:to-transparent">
+              <div className="py-3.5 flex flex-col items-center justify-center border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0B111E]">
                 <button
                   type="button"
                   onClick={() => setCollapsed(false)}

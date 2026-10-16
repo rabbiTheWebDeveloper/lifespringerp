@@ -423,7 +423,7 @@ export default function AdminDashboardPage() {
               <span className="text-emerald-300/90 font-mono">v3.2 Enterprise</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold tracking-tight text-white flex items-center gap-3">
               <span>Executive Hospital Command Center</span>
             </h1>
 
