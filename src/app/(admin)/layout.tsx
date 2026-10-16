@@ -29,6 +29,7 @@ import {
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { logout } from "@/lib/auth";
+import Cookies from "js-cookie";
 
 export default function AdminLayout({
   children,
@@ -39,21 +40,77 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [user, setUserState] = useState<any>(null);
+  const [avatarError, setAvatarError] = useState(false);
+
+  const toggleSidebar = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setMobileOpen((prev) => !prev);
+    } else {
+      setDesktopSidebarOpen((prev) => !prev);
+    }
+  };
 
   // Load user data from cookies / localStorage
   useEffect(() => {
     try {
+      let data: any = null;
       const stored = localStorage.getItem("user");
       if (stored) {
-        setUserState(JSON.parse(stored));
+        data = JSON.parse(stored);
+      } else {
+        const cookieVal = Cookies.get("user");
+        if (cookieVal) {
+          data = JSON.parse(cookieVal);
+        }
+      }
+
+      if (data) {
+        setUserState(data);
+      } else {
+        // Fallback default admin profile
+        setUserState({
+          fullName: "Fajr Academy",
+          role: "super-admin",
+          employeeId: "ADM-0042",
+          avatar: "",
+        });
       }
     } catch {
-      // Fallback
+      setUserState({
+        fullName: "Fajr Academy",
+        role: "super-admin",
+        employeeId: "ADM-0042",
+        avatar: "",
+      });
     }
   }, []);
+
+  const displayName = user?.fullName || user?.name || "Fajr Academy";
+  const displayRole = user?.role
+    ? user.role === "admin"
+      ? "Super Admin"
+      : user.role.replace(/-/g, " ")
+    : "Super Admin";
+  const displayId =
+    user?.employeeId ||
+    user?.id ||
+    (user?._id
+      ? user._id.length > 8
+        ? user._id.slice(-6).toUpperCase()
+        : user._id
+      : "ADM-0042");
+
+  const getInitials = (name?: string) => {
+    if (!name) return "FA";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   // Auto-expand sales if we are on a sales route
   useEffect(() => {
@@ -105,12 +162,16 @@ export default function AdminLayout({
 
         {/* ── Sidebar Navigation ───────────────────────────────────────────── */}
         <aside
-          className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-white dark:bg-[#0B111E] border-r border-slate-200/80 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 ease-in-out shrink-0 ${
-            mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          className={`fixed lg:sticky top-0 left-0 z-50 h-screen bg-white dark:bg-[#0B111E] border-r border-slate-200/80 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
+            mobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
+          } ${
+            desktopSidebarOpen
+              ? "lg:w-72"
+              : "lg:w-0 lg:-translate-x-full lg:overflow-hidden lg:border-none"
           }`}
         >
-          {/* Top Brand Section */}
-          <div>
+          {/* Top Brand Section & User Profile */}
+          <div className="shrink-0">
             <div className="h-16 px-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5">
                 <div className="relative h-9 w-36 flex items-center">
@@ -141,19 +202,64 @@ export default function AdminLayout({
                 </span>
               </Link>
 
-              {/* Close Button on Mobile */}
+              {/* Close / Collapse Button */}
               <button
                 type="button"
-                onClick={() => setMobileOpen(false)}
-                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setDesktopSidebarOpen(false);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 aria-label="Close Sidebar"
+                title="Collapse Sidebar"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Nav Menu */}
-            <div className="px-3.5 py-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-170px)]">
+            {/* ── User Card at Sidebar TOP ── */}
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/40 dark:from-[#0c1424] dark:via-[#0c121e] dark:to-amber-950/20">
+              <div className="flex items-center gap-3">
+                {/* Circular Avatar with Gold Ring & Live Green Dot */}
+                <div className="relative shrink-0">
+                  {user?.avatar && !avatarError ? (
+                    <img
+                      src={user.avatar}
+                      alt={displayName}
+                      onError={() => setAvatarError(true)}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/90 dark:border-amber-400/80 shadow-md p-[1px] bg-white dark:bg-slate-900"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-amber-400/90 dark:border-amber-400/80">
+                      {getInitials(displayName)}
+                    </div>
+                  )}
+                  {/* Live Status Indicator Dot */}
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full shadow-sm" />
+                </div>
+
+                {/* User Details: Name, Role & ID */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight leading-tight">
+                    {displayName}
+                  </p>
+                  
+                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold capitalize leading-none">
+                      {displayRole}
+                    </span>
+                    <span className="text-[10px] text-slate-300 dark:text-slate-600 leading-none">•</span>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 leading-none">
+                      ID: {displayId}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nav Menu */}
+          <div className="px-3.5 py-4 space-y-1.5 overflow-y-auto flex-1">
               {/* Dashboard */}
               <Link
                 href="/"
@@ -250,32 +356,14 @@ export default function AdminLayout({
                 <span>Settings</span>
               </Link>
             </div>
-          </div>
 
-          {/* Bottom Section: Profile & Logout */}
-          <div className="p-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
-            {/* User Mini Card */}
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 flex items-center gap-3">
-              <div className="relative w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                {user?.fullName ? user.fullName[0].toUpperCase() : "A"}
-                <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                  {user?.fullName || "Administrator"}
-                </p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate capitalize">
-                  {user?.role || "Super Admin"}
-                </p>
-              </div>
-            </div>
-
-            {/* Logout Button */}
+          {/* Bottom Section: Logout */}
+          <div className="p-3.5 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
             <button
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-[0.98] cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-200/60 dark:border-red-900/40 transition-all active:scale-[0.98] cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>{loggingOut ? "Signing Out..." : "Log Out"}</span>
@@ -289,11 +377,13 @@ export default function AdminLayout({
           <header className="sticky top-0 z-30 h-16 bg-white/80 dark:bg-[#070b12]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Mobile Menu Trigger */}
+              {/* Header Menu Trigger (Desktop & Mobile) */}
               <button
                 type="button"
-                onClick={() => setMobileOpen(true)}
-                className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                aria-label="Open Sidebar"
+                onClick={toggleSidebar}
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Toggle Sidebar Navigation"
+                title="Toggle Sidebar (Logo & User Details)"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -308,7 +398,7 @@ export default function AdminLayout({
             </div>
 
             {/* Header Right Actions */}
-            <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Quick Search Trigger */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-400">
                 <Search className="w-3.5 h-3.5" />
@@ -339,17 +429,186 @@ export default function AdminLayout({
               {/* Theme Toggle */}
               <ThemeToggle />
 
-              {/* Logout Button in Header */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-                title="Log Out"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Logout</span>
-              </button>
+              {/* ── Header User Profile Trigger & Dropdown showing Sidebar Logo & Details ── */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200/60 dark:border-slate-800 cursor-pointer"
+                  title="View Sidebar Logo & User Details"
+                >
+                  {/* Circular Avatar with Gold Ring & Live Green Dot */}
+                  <div className="relative shrink-0">
+                    {user?.avatar && !avatarError ? (
+                      <img
+                        src={user.avatar}
+                        alt={displayName}
+                        onError={() => setAvatarError(true)}
+                        className="w-7 h-7 rounded-full object-cover border-2 border-amber-400 dark:border-amber-400/80 shadow-sm p-[1px] bg-white dark:bg-slate-900"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-[10px] font-black shadow-sm border-2 border-amber-400 dark:border-amber-400/80">
+                        {getInitials(displayName)}
+                      </div>
+                    )}
+                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border-2 border-white dark:border-[#070b12] rounded-full" />
+                  </div>
+
+                  {/* Name & Role on sm+ screens */}
+                  <div className="hidden sm:block text-left min-w-0">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
+                      {displayName}
+                    </p>
+                    <div className="flex items-center gap-1 leading-none mt-0.5">
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold capitalize">
+                        {displayRole}
+                      </span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500">#{displayId}</span>
+                    </div>
+                  </div>
+
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Dropdown Card Showing Sidebar Logo & Sidebar Details */}
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-12 mt-2 w-80 z-50 bg-white dark:bg-[#0B111E] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                      {/* 1. Sidebar Brand Logo Section */}
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/60 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative h-8 w-32 flex items-center">
+                            <Image
+                              src="/images/lifespring-logo.png"
+                              alt="LifeSpring"
+                              width={128}
+                              height={32}
+                              priority
+                              className="object-contain dark:brightness-110"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = "none";
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                            <div
+                              style={{ display: "none" }}
+                              className="items-center gap-2 font-bold text-sm text-emerald-700 dark:text-emerald-400"
+                            >
+                              <HeartPulse className="w-4 h-4 text-emerald-600" />
+                              <span>LifeSpring ERP</span>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            Admin
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => setUserMenuOpen(false)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* 2. Sidebar User Details Card */}
+                      <div className="p-4 bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-amber-50/40 dark:from-[#0c1424] dark:via-[#0c121e] dark:to-amber-950/20 border-b border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-center gap-3.5">
+                          {/* Circular Avatar with Gold Ring & Live Green Dot */}
+                          <div className="relative shrink-0">
+                            {user?.avatar && !avatarError ? (
+                              <img
+                                src={user.avatar}
+                                alt={displayName}
+                                onError={() => setAvatarError(true)}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-400/80 shadow-md p-[1px] bg-white dark:bg-slate-900"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-sm font-black shadow-md border-2 border-amber-400 dark:border-amber-400/80">
+                                {getInitials(displayName)}
+                              </div>
+                            )}
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white dark:border-[#0B111E] rounded-full shadow-sm" />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                              {displayName}
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold capitalize mt-0.5">
+                              {displayRole}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                                ID: {displayId}
+                              </span>
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3" />
+                                Verified
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3. Quick Navigation Links */}
+                      <div className="p-2 space-y-1 text-xs">
+                        <Link
+                          href="/"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span>Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/appointments"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <CalendarDays className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span>Appointments</span>
+                        </Link>
+                        <Link
+                          href="/sales"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <TrendingUp className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          <span>Sales Pipeline</span>
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <Settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                          <span>Settings</span>
+                        </Link>
+                      </div>
+
+                      {/* 4. Logout Action */}
+                      <div className="p-2 border-t border-slate-100 dark:border-slate-800/80">
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          disabled={loggingOut}
+                          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>{loggingOut ? "Signing Out..." : "Log Out"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </header>
 
