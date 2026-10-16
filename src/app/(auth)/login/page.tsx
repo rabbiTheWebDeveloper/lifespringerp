@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -104,7 +104,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 w-full h-full overflow-y-auto overscroll-none flex flex-col">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image src="/images/login-bg.jpg" alt="LifeSpring Healthcare Background" fill priority quality={95} className="object-cover object-center scale-105" />
@@ -118,8 +118,9 @@ export default function LoginPage() {
         <ParticleCanvas />
       </div>
 
-      {/* Centered Card */}
-      <div className="relative z-10 w-full max-w-[430px] mx-4 sm:mx-auto">
+      {/* Centered Card — flex grows to fill the scroll container */}
+      <div className="relative z-10 flex-1 flex items-center justify-center py-20 sm:py-24 px-4">
+      <div className="w-full max-w-[430px] mx-auto">
         <div className="absolute -inset-16 bg-emerald-500/8 rounded-[60px] blur-3xl pointer-events-none animate-pulse" />
 
         {/* Gradient border */}
@@ -129,13 +130,13 @@ export default function LoginPage() {
             {/* Progress bar */}
             <div className="absolute top-0 left-0 h-[2.5px] bg-gradient-to-r from-emerald-400 via-teal-300 to-lime-400 transition-all duration-500 ease-out z-20" style={{ width: `${progress}%`, opacity: progress > 0 ? 1 : 0, boxShadow: progress > 0 ? "0 0 16px rgba(52,211,153,0.9)" : "none" }} />
 
-            <div className="px-7 pt-9 pb-8 sm:px-10 sm:pt-11 sm:pb-9">
+            <div className="px-5 pt-7 pb-6 sm:px-8 sm:pt-9 sm:pb-8">
 
               {/* Header */}
-              <div className="flex flex-col items-center text-center mb-8 gap-4">
+              <div className="flex flex-col items-center text-center mb-6 gap-3">
                 <div className="relative">
-                  <div className="w-[68px] h-[68px] rounded-[20px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(20,184,166,0.1) 100%)", border: "1px solid rgba(16,185,129,0.28)", boxShadow: "0 8px 32px rgba(16,185,129,0.18), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                    <Image src="/images/lifespring-icon.png" alt="LifeSpring" width={38} height={38} className="object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
+                  <div className="w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-[18px] sm:rounded-[20px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(20,184,166,0.1) 100%)", border: "1px solid rgba(16,185,129,0.28)", boxShadow: "0 8px 32px rgba(16,185,129,0.18), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
+                    <Image src="/images/lifespring-icon.png" alt="LifeSpring" width={34} height={34} className="object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
                   </div>
                   <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70" />
@@ -148,8 +149,8 @@ export default function LoginPage() {
                     <Sparkles className="w-2.5 h-2.5 text-lime-300 animate-pulse" />
                     LifeSpring ERP Portal
                   </div>
-                  <h1 className="text-[1.8rem] sm:text-[2.1rem] font-black text-white tracking-tight leading-none">Welcome Back</h1>
-                  <p className="text-[12px] text-slate-400/80 leading-relaxed">Sign in to access your healthcare management portal</p>
+                  <h1 className="text-[1.55rem] sm:text-[1.9rem] font-black text-white tracking-tight leading-none">Welcome Back</h1>
+                  <p className="text-[11px] sm:text-[12px] text-slate-400/80 leading-relaxed">Sign in to access your healthcare management portal</p>
                 </div>
               </div>
 
@@ -246,10 +247,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-
-        <p className="text-center text-[10px] mt-5 font-medium tracking-wider" style={{ color: "rgba(255,255,255,0.15)" }}>
-          &copy; 2026 LifeSpring Limited &middot; Healthcare ERP v2.4
-        </p>
+      </div>
       </div>
     </div>
   );
