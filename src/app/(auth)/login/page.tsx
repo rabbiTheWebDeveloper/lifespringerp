@@ -40,7 +40,7 @@ export default function LoginPage() {
     setSuccess(null);
 
     if (!identifier.trim()) {
-      setError("Please enter your email address.");
+      setError("Please enter your Email Address.");
       return;
     }
     if (!password) {
@@ -93,31 +93,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#f3f6f4] font-sans-clean selection:bg-[#007a55] selection:text-white overflow-x-hidden">
+    <div className="h-screen w-full flex flex-col lg:flex-row bg-[#f6f9f8] font-sans-clean selection:bg-[#007a55] selection:text-white overflow-hidden">
       {/* ========================================================= */}
-      {/* LEFT COLUMN: HERO, HEADLINE, FEATURES & WAVE BANNER       */}
+      {/* LEFT COLUMN: HERO, VALUE PROPOSITIONS & ARTISTIC WAVE     */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-[57%] xl:w-[58%] min-h-[640px] lg:h-screen lg:max-h-screen flex flex-col justify-between overflow-hidden bg-white select-none">
-        {/* Background Image: Crisp Clinical Consultation Desk */}
+      <div className="relative w-full lg:w-[58%] xl:w-[59%] h-full flex flex-col justify-between overflow-hidden bg-white select-none">
+        {/* Background Image: Clean Hospital Consultation Desk */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
-            src="/images/auth-hero-bg.jpg"
+            src="/images/auth-hero-clinic-v2.jpg"
             alt="LifeSpring Hospital Consultation Desk"
             fill
             priority
-            quality={95}
-            className="object-cover object-right-bottom scale-100"
+            quality={98}
+            className="object-cover object-[75%_center]"
           />
-          {/* Subtle soft white gradient wash for editorial contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/20 lg:to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-white/20" />
+          {/* Soft white gradient wash for editorial text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-white/10" />
         </div>
 
-        {/* Content Container */}
-        <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-10 lg:p-12 xl:p-14">
-          {/* Top: LifeSpring Brand Logo */}
+        {/* Top: LifeSpring Brand Logo */}
+        <div className="relative z-10 p-6 sm:p-8 lg:p-10 xl:p-12 pb-0">
           <div className="flex items-center gap-3">
-            <div className="relative w-11 h-11 shrink-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 shrink-0">
               <Image
                 src="/images/lifespring-icon.png"
                 alt="LifeSpring Logo"
@@ -135,95 +134,96 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-
-          {/* Middle: Editorial Headline & 4 Feature Highlights */}
-          <div className="my-auto py-4 sm:py-6 max-w-xl xl:max-w-2xl">
-            <h1 className="font-serif-display text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-bold text-[#083b28] leading-[1.12] tracking-tight">
-              Better Healthcare<br />
-              Management<br />
-              for a Healthier Tomorrow
-            </h1>
-
-            <p className="text-slate-600 text-[13.5px] sm:text-[15px] leading-relaxed mt-3.5 sm:mt-4 max-w-lg font-normal">
-              Streamline your hospital operations, manage patients, and deliver quality care — all in one place.
-            </p>
-
-            {/* 4 Feature Highlights in a single horizontal row on desktop */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mt-6 sm:mt-8 pt-1">
-              {/* Card 1: Patient Management */}
-              <div className="flex flex-col items-start">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
-                  <Users className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
-                  Patient Management
-                </h2>
-                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
-                  Complete patient lifecycle
-                </p>
-              </div>
-
-              {/* Card 2: Appointments */}
-              <div className="flex flex-col items-start">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
-                  <Calendar className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
-                  Appointments
-                </h2>
-                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
-                  Easy scheduling & tracking
-                </p>
-              </div>
-
-              {/* Card 3: Clinical Records */}
-              <div className="flex flex-col items-start">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
-                  <FileText className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
-                  Clinical Records
-                </h2>
-                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
-                  Secure & organized medical history
-                </p>
-              </div>
-
-              {/* Card 4: Reports & Analytics */}
-              <div className="flex flex-col items-start">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
-                  <BarChart3 className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
-                  Reports & Analytics
-                </h2>
-                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
-                  Data-driven decisions
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom buffer */}
-          <div className="h-16 sm:h-20" />
         </div>
 
+        {/* Middle: Editorial Headline & 4 Feature Badges */}
+        <div className="relative z-10 px-6 sm:px-8 lg:px-10 xl:px-12 my-auto max-w-xl xl:max-w-2xl">
+          <h1 className="font-serif-display text-3xl sm:text-4xl lg:text-[42px] xl:text-[46px] font-bold text-[#0c3c2a] leading-[1.12] tracking-tight">
+            Better Healthcare<br />
+            Management<br />
+            for a Healthier Tomorrow
+          </h1>
+
+          <p className="text-slate-600 text-[13.5px] sm:text-[14.5px] leading-relaxed mt-3.5 max-w-lg font-normal">
+            Streamline your hospital operations, manage patients,<br className="hidden sm:block" />
+            and deliver quality care — all in one place.
+          </p>
+
+          {/* 4 Feature Highlights in a horizontal row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-1 max-w-lg">
+            {/* Card 1: Patient Management */}
+            <div className="flex flex-col items-start">
+              <div className="w-10 h-10 rounded-xl bg-[#eef8f2] text-[#007a55] flex items-center justify-center">
+                <Users className="w-4.5 h-4.5 stroke-[2]" />
+              </div>
+              <h2 className="font-bold text-[13px] text-[#113a2b] mt-2.5 leading-tight">
+                Patient<br />Management
+              </h2>
+              <p className="text-slate-500 text-[11px] leading-tight mt-1">
+                Complete patient lifecycle
+              </p>
+            </div>
+
+            {/* Card 2: Appointments */}
+            <div className="flex flex-col items-start">
+              <div className="w-10 h-10 rounded-xl bg-[#eef8f2] text-[#007a55] flex items-center justify-center">
+                <Calendar className="w-4.5 h-4.5 stroke-[2]" />
+              </div>
+              <h2 className="font-bold text-[13px] text-[#113a2b] mt-2.5 leading-tight">
+                Appointments
+              </h2>
+              <p className="text-slate-500 text-[11px] leading-tight mt-1">
+                Easy scheduling &amp; tracking
+              </p>
+            </div>
+
+            {/* Card 3: Clinical Records */}
+            <div className="flex flex-col items-start">
+              <div className="w-10 h-10 rounded-xl bg-[#eef8f2] text-[#007a55] flex items-center justify-center">
+                <FileText className="w-4.5 h-4.5 stroke-[2]" />
+              </div>
+              <h2 className="font-bold text-[13px] text-[#113a2b] mt-2.5 leading-tight">
+                Clinical Records
+              </h2>
+              <p className="text-slate-500 text-[11px] leading-tight mt-1">
+                Secure &amp; organized medical history
+              </p>
+            </div>
+
+            {/* Card 4: Reports & Analytics */}
+            <div className="flex flex-col items-start">
+              <div className="w-10 h-10 rounded-xl bg-[#eef8f2] text-[#007a55] flex items-center justify-center">
+                <BarChart3 className="w-4.5 h-4.5 stroke-[2]" />
+              </div>
+              <h2 className="font-bold text-[13px] text-[#113a2b] mt-2.5 leading-tight">
+                Reports &amp; Analytics
+              </h2>
+              <p className="text-slate-500 text-[11px] leading-tight mt-1">
+                Data-driven decisions
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom space buffer */}
+        <div className="h-28 pointer-events-none" />
+
         {/* ========================================================= */}
-        {/* BOTTOM LEFT WAVE GRAPHIC: EXACT ORGANIC CURVES & TEXT     */}
+        {/* BOTTOM LEFT WAVE GRAPHIC WITH SCRIPT TYPOGRAPHY           */}
         {/* ========================================================= */}
-        <div className="absolute bottom-0 left-0 w-[105%] sm:w-[90%] lg:w-[85%] xl:w-[78%] pointer-events-none select-none z-20">
+        <div className="absolute bottom-0 left-0 w-full pointer-events-none select-none z-20">
           <svg
-            viewBox="0 0 760 210"
+            viewBox="0 0 1000 240"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-auto drop-shadow-sm"
+            className="w-full h-auto block"
             preserveAspectRatio="none"
           >
             <defs>
               <linearGradient id="waveMint" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#10b981" stopOpacity="0.85" />
                 <stop offset="45%" stopColor="#34d399" stopOpacity="0.75" />
-                <stop offset="100%" stopColor="#059669" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.15" />
               </linearGradient>
               <linearGradient id="waveDeepForest" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#05442e" />
@@ -232,21 +232,21 @@ export default function LoginPage() {
               </linearGradient>
             </defs>
 
-            {/* Mint Wave Layer */}
+            {/* Mint Wave Layer with dipping curve */}
             <path
-              d="M0 95 C 160 70 340 145 760 90 L 760 210 L 0 210 Z"
+              d="M 0 105 C 320 85 460 215 780 160 C 890 140 960 115 1000 95 L 1000 240 L 0 240 Z"
               fill="url(#waveMint)"
             />
 
             {/* Deep Green Wave Layer */}
             <path
-              d="M0 120 C 190 95 390 170 760 125 L 760 210 L 0 210 Z"
+              d="M 0 135 C 340 115 480 235 780 185 C 890 165 960 145 1000 125 L 1000 240 L 0 240 Z"
               fill="url(#waveDeepForest)"
             />
           </svg>
 
           {/* Script Text over the Wave: "Together for Better Health" */}
-          <div className="absolute bottom-4 sm:bottom-6 left-6 sm:left-10 -rotate-[8deg] flex flex-col items-start drop-shadow">
+          <div className="absolute bottom-4 sm:bottom-6 left-6 sm:left-10 -rotate-[9deg] flex flex-col items-start drop-shadow">
             <span className="font-handwriting text-white text-2xl sm:text-[27px] font-semibold leading-tight tracking-wide">
               Together for
             </span>
@@ -272,11 +272,11 @@ export default function LoginPage() {
       </div>
 
       {/* ========================================================= */}
-      {/* RIGHT COLUMN: AUTH CARD, SSO, SECURITY BADGE & FOOTER    */}
+      {/* RIGHT COLUMN: FLOATING AUTH CARD & SYSTEM METADATA        */}
       {/* ========================================================= */}
-      <div className="w-full lg:w-[43%] xl:w-[42%] min-h-screen bg-[#f3f6f4] flex flex-col justify-between items-center py-5 sm:py-6 px-4 sm:px-6 lg:px-8 relative z-20">
+      <div className="w-full lg:w-[42%] xl:w-[41%] h-full bg-[#f6f9f8] flex flex-col justify-between items-center py-5 sm:py-6 px-4 sm:px-6 relative z-20 overflow-y-auto">
         {/* Top Header: Language Switcher Dropdown */}
-        <div className="w-full flex justify-end max-w-[440px] relative">
+        <div className="w-full flex justify-end max-w-[430px] relative">
           <div className="relative">
             <button
               type="button"
@@ -313,8 +313,8 @@ export default function LoginPage() {
         </div>
 
         {/* Center: Main Elevated Sign-In Card */}
-        <div className="w-full max-w-[440px] my-auto py-3">
-          <div className="bg-white rounded-[26px] shadow-[0_15px_45px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.02)] border border-slate-100/90 p-6 sm:p-8 transition-all">
+        <div className="w-full max-w-[430px] my-auto py-2">
+          <div className="bg-white rounded-[26px] shadow-[0_20px_50px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.02)] p-7 sm:p-8 transition-all">
             {/* Center Logo in Card */}
             <div className="flex flex-col items-center text-center">
               <div className="relative w-11 h-11 mb-1.5">
@@ -339,10 +339,10 @@ export default function LoginPage() {
               <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-[#059669]">
                 WELCOME BACK
               </span>
-              <h2 className="font-serif-display text-2xl sm:text-[26px] font-bold text-[#0c3123] mt-0.5 leading-tight">
+              <h2 className="font-serif-display text-2xl sm:text-[25px] font-bold text-[#0c3123] mt-0.5 leading-tight">
                 Sign in to your account
               </h2>
-              <p className="text-slate-500 text-[13px] mt-1">
+              <p className="text-slate-500 text-[12.5px] sm:text-[13px] mt-1">
                 Access your dashboard and manage your operations.
               </p>
             </div>
@@ -519,51 +519,16 @@ export default function LoginPage() {
             </button>
 
             {/* Bottom Security Box inside the card */}
-            <div className="mt-4 p-2.5 px-3.5 rounded-xl bg-[#ebf8f2] border border-[#d2efe0] flex items-center gap-3">
+            <div className="mt-4 p-2.5 px-3.5 rounded-xl bg-[#ebf8f2] flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-[#007a55] shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-bold text-[#065f46] leading-snug">
-                  Secure & Encrypted
+                  Secure &amp; Encrypted
                 </span>
                 <span className="text-[11px] text-[#047857] leading-snug">
                   Your data is safe with us
                 </span>
               </div>
-            </div>
-
-            {/* Discreet Quick Demo Role Switcher */}
-            <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-              <span className="font-medium">Quick Demo:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier("admin@lifespring.com");
-                  setPassword("admin123");
-                }}
-                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier("doctor@lifespringint.com");
-                  setPassword("123456");
-                }}
-                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
-              >
-                Doctor
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier("patient@lifespringint.com");
-                  setPassword("123456");
-                }}
-                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
-              >
-                Patient
-              </button>
             </div>
           </div>
         </div>
