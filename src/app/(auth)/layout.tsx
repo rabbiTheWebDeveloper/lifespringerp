@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -6,12 +6,24 @@ import Image from "next/image";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { HeartPulse, PhoneCall, ShieldCheck, Lock } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // The login page has its own dedicated full-screen dual-pane layout matching the exact design specification
+  if (pathname === "/login") {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen w-full">{children}</div>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <div className="min-h-screen flex flex-col bg-[#030b05] text-white font-sans relative">

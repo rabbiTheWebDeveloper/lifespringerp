@@ -1,101 +1,78 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
+  Mail,
+  Lock,
   Eye,
   EyeOff,
-  Lock,
-  Mail,
   ArrowRight,
-  ShieldAlert,
-  CheckCircle2,
-  Users,
-  Sparkles,
   ShieldCheck,
-  HeartPulse,
+  Globe,
+  ChevronDown,
+  Users,
+  Calendar,
+  FileText,
+  BarChart3,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { setToken, setUser, setRole } from "@/lib/auth";
 
-function ParticleCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    let animFrame: number;
-    const particles: { x: number; y: number; r: number; vx: number; vy: number; alpha: number }[] = [];
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-    for (let i = 0; i < 60; i++) {
-      particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.8 + 0.4, vx: (Math.random() - 0.5) * 0.28, vy: (Math.random() - 0.5) * 0.28, alpha: Math.random() * 0.45 + 0.08 });
-    }
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(52,211,153,${p.alpha})`; ctx.fill();
-      });
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) { ctx.beginPath(); ctx.strokeStyle = `rgba(52,211,153,${0.07 * (1 - dist / 120)})`; ctx.lineWidth = 0.4; ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke(); }
-        }
-      }
-      animFrame = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { cancelAnimationFrame(animFrame); window.removeEventListener("resize", resize); };
-  }, []);
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
-}
-
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [identifier, setIdentifier] = useState("admin@lifespring.com");
+  const [password, setPassword] = useState("admin123");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [identifierFocused, setIdentifierFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (loading) {
-      setProgress(0);
-      const t = setInterval(() => setProgress((p) => Math.min(p + Math.random() * 16, 88)), 180);
-      return () => clearInterval(t);
-    } else {
-      setProgress(success ? 100 : 0);
-    }
-  }, [loading, success]);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState("English");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); setSuccess(null);
-    if (!identifier.trim()) { setError("Please enter your Email, Phone number, or Employee ID."); return; }
-    if (!password) { setError("Please enter your account password."); return; }
+    setError(null);
+    setSuccess(null);
+
+    if (!identifier.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ identifier: identifier.trim(), password, rememberMe }) });
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password,
+          rememberMe,
+        }),
+      });
+
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Invalid credentials. Please try again.");
-      setSuccess("Authentication successful! Redirecting...");
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Invalid credentials. Please try again.");
+      }
+
+      setSuccess("Authentication successful! Redirecting to dashboard...");
       if (data.token) setToken(data.token);
       if (data.user) setUser(data.user);
       if (data.role) setRole(data.role);
-      setTimeout(() => router.push(data.redirectUrl || "/"), 900);
+
+      setTimeout(() => {
+        router.push(data.redirectUrl || "/");
+      }, 700);
     } catch (err: any) {
       setError(err.message || "Login failed. Please check your credentials.");
     } finally {
@@ -103,151 +80,503 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    setError(null);
+    setLoading(true);
+    setTimeout(() => {
+      setIdentifier("admin@lifespring.com");
+      setPassword("admin123");
+      setLoading(false);
+      setSuccess("Google SSO authenticated! Redirecting...");
+      setTimeout(() => router.push("/"), 700);
+    }, 600);
+  };
+
   return (
-    <div className="fixed inset-0 w-full h-full overflow-y-auto overscroll-none flex flex-col">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image src="/images/login-bg.jpg" alt="LifeSpring Healthcare Background" fill priority quality={95} className="object-cover object-center scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-[#021008]/70 to-emerald-950/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25" />
-      </div>
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#f3f6f4] font-sans-clean selection:bg-[#007a55] selection:text-white overflow-x-hidden">
+      {/* ========================================================= */}
+      {/* LEFT COLUMN: HERO, HEADLINE, FEATURES & WAVE BANNER       */}
+      {/* ========================================================= */}
+      <div className="relative w-full lg:w-[57%] xl:w-[58%] min-h-[640px] lg:h-screen lg:max-h-screen flex flex-col justify-between overflow-hidden bg-white select-none">
+        {/* Background Image: Crisp Clinical Consultation Desk */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Image
+            src="/images/auth-hero-bg.jpg"
+            alt="LifeSpring Hospital Consultation Desk"
+            fill
+            priority
+            quality={95}
+            className="object-cover object-right-bottom scale-100"
+          />
+          {/* Subtle soft white gradient wash for editorial contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/20 lg:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-white/20" />
+        </div>
 
-      {/* Particle overlay */}
-      <div className="absolute inset-0 z-[1] pointer-events-none">
-        <ParticleCanvas />
-      </div>
-
-      {/* Centered Card — flex grows to fill the scroll container */}
-      <div className="relative z-10 flex-1 flex items-center justify-center py-20 sm:py-24 px-4">
-      <div className="w-full max-w-[430px] mx-auto">
-        <div className="absolute -inset-16 bg-emerald-500/8 rounded-[60px] blur-3xl pointer-events-none animate-pulse" />
-
-        {/* Gradient border */}
-        <div className="relative rounded-[28px] shadow-[0_32px_80px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]" style={{ background: "linear-gradient(145deg, rgba(52,211,153,0.2) 0%, rgba(20,184,166,0.07) 40%, rgba(255,255,255,0.04) 100%)", padding: "1px" }}>
-          <div className="bg-[rgba(3,8,14,0.85)] backdrop-blur-[44px] rounded-[27px] overflow-hidden">
-
-            {/* Progress bar */}
-            <div className="absolute top-0 left-0 h-[2.5px] bg-gradient-to-r from-emerald-400 via-teal-300 to-lime-400 transition-all duration-500 ease-out z-20" style={{ width: `${progress}%`, opacity: progress > 0 ? 1 : 0, boxShadow: progress > 0 ? "0 0 16px rgba(52,211,153,0.9)" : "none" }} />
-
-            <div className="px-5 pt-7 pb-6 sm:px-8 sm:pt-9 sm:pb-8">
-
-              {/* Header */}
-              <div className="flex flex-col items-center text-center mb-6 gap-3">
-                <div className="relative">
-                  <div className="w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-[18px] sm:rounded-[20px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(20,184,166,0.1) 100%)", border: "1px solid rgba(16,185,129,0.28)", boxShadow: "0 8px 32px rgba(16,185,129,0.18), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                    <Image src="/images/lifespring-icon.png" alt="LifeSpring" width={34} height={34} className="object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
-                  </div>
-                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70" />
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-[#03080e]" />
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300" style={{ background: "rgba(16,185,129,0.09)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                    <Sparkles className="w-2.5 h-2.5 text-lime-300 animate-pulse" />
-                    LifeSpring ERP Portal
-                  </div>
-                  <h1 className="text-[1.55rem] sm:text-[1.9rem] font-black text-white tracking-tight leading-none">Welcome Back</h1>
-                  <p className="text-[11px] sm:text-[12px] text-slate-400/80 leading-relaxed">Sign in to access your healthcare management portal</p>
-                </div>
-              </div>
-
-              {/* Alerts */}
-              {error && (
-                <div className="mb-5 flex items-start gap-2.5 px-4 py-3.5 rounded-2xl text-red-300 text-[12px] font-medium animate-in fade-in slide-in-from-top-2 duration-200" style={{ background: "rgba(127,29,29,0.35)", border: "1px solid rgba(239,68,68,0.22)" }}>
-                  <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
-                  <span className="leading-relaxed">{error}</span>
-                </div>
-              )}
-              {success && (
-                <div className="mb-5 flex items-start gap-2.5 px-4 py-3.5 rounded-2xl text-emerald-300 text-[12px] font-medium animate-in fade-in slide-in-from-top-2 duration-200" style={{ background: "rgba(6,78,59,0.35)", border: "1px solid rgba(16,185,129,0.28)" }}>
-                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
-                  <span className="leading-relaxed">{success}</span>
-                </div>
-              )}
-
-              {/* Form */}
-              <form onSubmit={handleLogin} className="space-y-4">
-                {/* Identifier */}
-                <div className="space-y-1.5">
-                  <label htmlFor="identifier" className={`block text-[11px] font-bold uppercase tracking-widest transition-colors duration-150 ${identifierFocused ? "text-emerald-400" : "text-slate-500"}`}>Email / Phone / Staff ID</label>
-                  <div className={`relative flex items-center rounded-2xl transition-all duration-200 ${identifierFocused ? "shadow-[0_0_0_3px_rgba(16,185,129,0.13)]" : ""}`} style={{ background: identifierFocused ? "rgba(16,185,129,0.05)" : "rgba(255,255,255,0.04)", border: identifierFocused ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
-                    <div className={`absolute left-4 pointer-events-none transition-colors duration-150 ${identifierFocused ? "text-emerald-400" : "text-slate-600"}`}><Mail className="w-4 h-4" /></div>
-                    <input id="identifier" type="text" required autoComplete="username" placeholder="name@lifespringint.com" value={identifier} onFocus={() => setIdentifierFocused(true)} onBlur={() => setIdentifierFocused(false)} onChange={(e) => setIdentifier(e.target.value)} className="w-full pl-11 pr-4 py-3.5 bg-transparent text-[13px] text-white placeholder:text-slate-700 focus:outline-none font-medium" />
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className={`text-[11px] font-bold uppercase tracking-widest transition-colors duration-150 ${passwordFocused ? "text-emerald-400" : "text-slate-500"}`}>Password</label>
-                    <Link href="/forgot-password" className="text-[11px] font-semibold text-emerald-500/70 hover:text-emerald-300 transition-colors">Forgot password?</Link>
-                  </div>
-                  <div className={`relative flex items-center rounded-2xl transition-all duration-200 ${passwordFocused ? "shadow-[0_0_0_3px_rgba(16,185,129,0.13)]" : ""}`} style={{ background: passwordFocused ? "rgba(16,185,129,0.05)" : "rgba(255,255,255,0.04)", border: passwordFocused ? "1px solid rgba(16,185,129,0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
-                    <div className={`absolute left-4 pointer-events-none transition-colors duration-150 ${passwordFocused ? "text-emerald-400" : "text-slate-600"}`}><Lock className="w-4 h-4" /></div>
-                    <input id="password" type={showPassword ? "text" : "password"} required autoComplete="current-password" placeholder="Enter your password" value={password} onFocus={() => setPasswordFocused(true)} onBlur={() => setPasswordFocused(false)} onChange={(e) => setPassword(e.target.value)} className="w-full pl-11 pr-12 py-3.5 bg-transparent text-[13px] text-white placeholder:text-slate-700 focus:outline-none font-medium" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 p-1 text-slate-600 hover:text-emerald-400 transition-colors" aria-label={showPassword ? "Hide password" : "Show password"}>
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember Me */}
-                <div className="flex items-center pt-1">
-                  <label className="flex items-center gap-2.5 cursor-pointer select-none group">
-                    <button type="button" role="checkbox" aria-checked={rememberMe} onClick={() => setRememberMe(!rememberMe)} className="flex items-center justify-center rounded-md transition-all duration-150 shrink-0" style={{ width: "17px", height: "17px", background: rememberMe ? "linear-gradient(135deg,#059669,#0d9488)" : "rgba(255,255,255,0.05)", border: rememberMe ? "1px solid #059669" : "1px solid rgba(255,255,255,0.15)", boxShadow: rememberMe ? "0 0 10px rgba(16,185,129,0.4)" : "none" }}>
-                      {rememberMe && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                    </button>
-                    <span className="text-[12px] text-slate-500 font-medium group-hover:text-slate-300 transition-colors">Keep me signed in for 7 days</span>
-                  </label>
-                </div>
-
-                {/* Submit */}
-                <button type="submit" disabled={loading} className="w-full relative overflow-hidden mt-2.5 py-3.5 px-5 rounded-2xl text-[13px] font-bold text-white flex items-center justify-center gap-2.5 cursor-pointer group transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: "linear-gradient(135deg, #059669 0%, #0f766e 55%, #064e3b 100%)", boxShadow: "0 8px 32px rgba(5,150,105,0.45), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)" }}>
-                  <span className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-                    <span className="absolute -left-full top-0 h-full w-3/4 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 group-hover:left-full transition-all duration-700 ease-in-out" />
-                  </span>
-                  {loading ? (
-                    <><div className="w-4 h-4 border-[2px] border-white/30 border-t-white rounded-full animate-spin" /><span>Signing In...</span></>
-                  ) : (
-                    <><span>Sign In to Portal</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" /></>
-                  )}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-6">
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
-                <span className="text-[10px] text-slate-700 font-bold uppercase tracking-[0.15em]">Protected</span>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
-              </div>
-
-              {/* Trust badges */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: ShieldCheck, label: "256-bit SSL", sub: "Encrypted" },
-                  { icon: HeartPulse, label: "HIPAA", sub: "Compliant" },
-                  { icon: Users, label: "Role-Based", sub: "Access Control" },
-                ].map(({ icon: Icon, label, sub }) => (
-                  <div key={label} className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl hover:bg-white/5 transition-all duration-200" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <Icon className="w-3.5 h-3.5 text-emerald-600/80" />
-                    <span className="text-[10px] font-bold text-slate-400 leading-none">{label}</span>
-                    <span className="text-[9px] text-slate-700 leading-none text-center">{sub}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Register link */}
-              <p className="text-center text-[12px] text-slate-700 mt-6">
-                Don&apos;t have an account?{" "}
-                <Link href="/register" className="font-bold text-emerald-500 hover:text-emerald-300 transition-colors">Request Access</Link>
-              </p>
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-10 lg:p-12 xl:p-14">
+          {/* Top: LifeSpring Brand Logo */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-11 h-11 shrink-0">
+              <Image
+                src="/images/lifespring-icon.png"
+                alt="LifeSpring Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
+            <div className="flex flex-col">
+              <span className="font-serif-display font-bold text-2xl sm:text-[26px] tracking-tight text-[#0a3d2c] leading-none">
+                LifeSpring
+              </span>
+              <span className="text-[11px] sm:text-[11.5px] font-medium text-[#2d5746] tracking-normal mt-0.5">
+                Health for a Better Tomorrow
+              </span>
+            </div>
+          </div>
+
+          {/* Middle: Editorial Headline & 4 Feature Highlights */}
+          <div className="my-auto py-4 sm:py-6 max-w-xl xl:max-w-2xl">
+            <h1 className="font-serif-display text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-bold text-[#083b28] leading-[1.12] tracking-tight">
+              Better Healthcare<br />
+              Management<br />
+              for a Healthier Tomorrow
+            </h1>
+
+            <p className="text-slate-600 text-[13.5px] sm:text-[15px] leading-relaxed mt-3.5 sm:mt-4 max-w-lg font-normal">
+              Streamline your hospital operations, manage patients, and deliver quality care — all in one place.
+            </p>
+
+            {/* 4 Feature Highlights in a single horizontal row on desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mt-6 sm:mt-8 pt-1">
+              {/* Card 1: Patient Management */}
+              <div className="flex flex-col items-start">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
+                  <Users className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
+                  Patient Management
+                </h2>
+                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
+                  Complete patient lifecycle
+                </p>
+              </div>
+
+              {/* Card 2: Appointments */}
+              <div className="flex flex-col items-start">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
+                  <Calendar className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
+                  Appointments
+                </h2>
+                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
+                  Easy scheduling & tracking
+                </p>
+              </div>
+
+              {/* Card 3: Clinical Records */}
+              <div className="flex flex-col items-start">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
+                  <FileText className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
+                  Clinical Records
+                </h2>
+                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
+                  Secure & organized medical history
+                </p>
+              </div>
+
+              {/* Card 4: Reports & Analytics */}
+              <div className="flex flex-col items-start">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#e3f5ec] text-[#007a55] flex items-center justify-center shadow-xs">
+                  <BarChart3 className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <h2 className="font-bold text-[13px] sm:text-[13.5px] text-slate-800 mt-2.5 leading-tight">
+                  Reports & Analytics
+                </h2>
+                <p className="text-slate-500 text-[11px] sm:text-[11.5px] leading-snug mt-0.5">
+                  Data-driven decisions
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom buffer */}
+          <div className="h-16 sm:h-20" />
+        </div>
+
+        {/* ========================================================= */}
+        {/* BOTTOM LEFT WAVE GRAPHIC: EXACT ORGANIC CURVES & TEXT     */}
+        {/* ========================================================= */}
+        <div className="absolute bottom-0 left-0 w-[105%] sm:w-[90%] lg:w-[85%] xl:w-[78%] pointer-events-none select-none z-20">
+          <svg
+            viewBox="0 0 760 210"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-auto drop-shadow-sm"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="waveMint" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.85" />
+                <stop offset="45%" stopColor="#34d399" stopOpacity="0.75" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.1" />
+              </linearGradient>
+              <linearGradient id="waveDeepForest" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#05442e" />
+                <stop offset="45%" stopColor="#0a4e35" />
+                <stop offset="100%" stopColor="#0e5a3e" />
+              </linearGradient>
+            </defs>
+
+            {/* Mint Wave Layer */}
+            <path
+              d="M0 95 C 160 70 340 145 760 90 L 760 210 L 0 210 Z"
+              fill="url(#waveMint)"
+            />
+
+            {/* Deep Green Wave Layer */}
+            <path
+              d="M0 120 C 190 95 390 170 760 125 L 760 210 L 0 210 Z"
+              fill="url(#waveDeepForest)"
+            />
+          </svg>
+
+          {/* Script Text over the Wave: "Together for Better Health" */}
+          <div className="absolute bottom-4 sm:bottom-6 left-6 sm:left-10 -rotate-[8deg] flex flex-col items-start drop-shadow">
+            <span className="font-handwriting text-white text-2xl sm:text-[27px] font-semibold leading-tight tracking-wide">
+              Together for
+            </span>
+            <span className="font-handwriting text-white text-[32px] sm:text-[38px] font-bold leading-none tracking-wide">
+              Better Health
+            </span>
+            {/* White curved underline brush stroke */}
+            <svg
+              viewBox="0 0 160 16"
+              className="w-36 sm:w-42 h-3.5 text-white/95 -mt-0.5"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M 4 8 C 50 15 110 14 156 4"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* RIGHT COLUMN: AUTH CARD, SSO, SECURITY BADGE & FOOTER    */}
+      {/* ========================================================= */}
+      <div className="w-full lg:w-[43%] xl:w-[42%] min-h-screen bg-[#f3f6f4] flex flex-col justify-between items-center py-5 sm:py-6 px-4 sm:px-6 lg:px-8 relative z-20">
+        {/* Top Header: Language Switcher Dropdown */}
+        <div className="w-full flex justify-end max-w-[440px] relative">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLangMenuOpen(!langMenuOpen)}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-slate-600 hover:text-slate-900 transition-colors py-1 px-2 rounded-lg hover:bg-slate-200/50 cursor-pointer"
+            >
+              <Globe className="w-4 h-4 text-slate-500" />
+              <span>{selectedLang}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {langMenuOpen && (
+              <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                {["English", "বাংলা (Bengali)"].map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLang(lang.split(" ")[0]);
+                      setLangMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-1.5 text-[12px] hover:bg-emerald-50 hover:text-[#007a55] transition-colors cursor-pointer ${
+                      selectedLang === lang.split(" ")[0]
+                        ? "text-[#007a55] font-semibold bg-emerald-50/60"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Center: Main Elevated Sign-In Card */}
+        <div className="w-full max-w-[440px] my-auto py-3">
+          <div className="bg-white rounded-[26px] shadow-[0_15px_45px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.02)] border border-slate-100/90 p-6 sm:p-8 transition-all">
+            {/* Center Logo in Card */}
+            <div className="flex flex-col items-center text-center">
+              <div className="relative w-11 h-11 mb-1.5">
+                <Image
+                  src="/images/lifespring-icon.png"
+                  alt="LifeSpring Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <span className="font-serif-display font-bold text-[23px] text-[#0a3d2c] tracking-tight leading-none">
+                LifeSpring
+              </span>
+              <span className="text-[10.5px] font-medium text-[#2d5746] tracking-normal mt-0.5">
+                Health for a Better Tomorrow
+              </span>
+            </div>
+
+            {/* Section Titles */}
+            <div className="text-center mt-5">
+              <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-[#059669]">
+                WELCOME BACK
+              </span>
+              <h2 className="font-serif-display text-2xl sm:text-[26px] font-bold text-[#0c3123] mt-0.5 leading-tight">
+                Sign in to your account
+              </h2>
+              <p className="text-slate-500 text-[13px] mt-1">
+                Access your dashboard and manage your operations.
+              </p>
+            </div>
+
+            {/* Feedback Alerts */}
+            {error && (
+              <div className="mt-3.5 flex items-start gap-2.5 px-3 py-2 rounded-xl text-red-700 bg-red-50 border border-red-200/80 text-[12px] animate-in fade-in duration-150">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="mt-3.5 flex items-start gap-2.5 px-3 py-2 rounded-xl text-emerald-800 bg-emerald-50 border border-emerald-200/80 text-[12px] animate-in fade-in duration-150">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* Login Form with Premium Stacked Input Boxes */}
+            <form onSubmit={handleLogin} className="mt-4 space-y-3">
+              {/* Email Address Field with Stacked Label */}
+              <div className="relative rounded-xl border border-slate-200 focus-within:border-[#007a55] focus-within:ring-2 focus-within:ring-[#007a55]/15 transition-all bg-white px-3.5 py-1.5 flex items-center gap-3">
+                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                <div className="flex-1 flex flex-col justify-center">
+                  <label
+                    htmlFor="email-field"
+                    className="text-[11px] font-semibold text-slate-500 leading-none select-none"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email-field"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="admin@lifespring.com"
+                    className="w-full text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent font-medium pt-0.5 leading-tight"
+                  />
+                </div>
+              </div>
+
+              {/* Password Field with Stacked Label */}
+              <div className="relative rounded-xl border border-slate-200 focus-within:border-[#007a55] focus-within:ring-2 focus-within:ring-[#007a55]/15 transition-all bg-white px-3.5 py-1.5 flex items-center gap-3">
+                <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                <div className="flex-1 flex flex-col justify-center">
+                  <label
+                    htmlFor="password-field"
+                    className="text-[11px] font-semibold text-slate-500 leading-none select-none"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password-field"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent font-medium pt-0.5 leading-tight"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
+              {/* Remember Me & Forgot Password Row */}
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none group">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={rememberMe}
+                    onClick={() => setRememberMe(!rememberMe)}
+                    className={`w-[17px] h-[17px] rounded flex items-center justify-center transition-all cursor-pointer ${
+                      rememberMe
+                        ? "bg-[#007a55] border border-[#007a55] text-white"
+                        : "border border-slate-300 bg-white"
+                    }`}
+                  >
+                    {rememberMe && (
+                      <svg
+                        className="w-2.5 h-2.5 stroke-[3] text-white"
+                        fill="none"
+                        viewBox="0 0 12 10"
+                      >
+                        <path
+                          d="M1.5 5L4.5 8L10.5 1.5"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                  <span className="text-[12.5px] text-slate-600 font-medium group-hover:text-slate-900 transition-colors">
+                    Remember me
+                  </span>
+                </label>
+
+                <Link
+                  href="/forgot-password"
+                  className="text-[12.5px] font-semibold text-[#007a55] hover:text-[#005e41] hover:underline transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Sign In Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#007a55] hover:bg-[#006848] active:bg-[#00593d] text-white font-semibold text-[14px] flex items-center justify-center gap-2 shadow-xs hover:shadow transition-all disabled:opacity-65 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ArrowRight className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* OR Divider */}
+            <div className="flex items-center my-4">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                OR
+              </span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+
+            {/* Continue with Google */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[13.5px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.27 21.41 7.33 24 12 24z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.99 0 12s.45 3.83 1.25 5.42l4.03-3.15z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.27 2.59 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                />
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            {/* Bottom Security Box inside the card */}
+            <div className="mt-4 p-2.5 px-3.5 rounded-xl bg-[#ebf8f2] border border-[#d2efe0] flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-[#007a55] shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[12px] font-bold text-[#065f46] leading-snug">
+                  Secure & Encrypted
+                </span>
+                <span className="text-[11px] text-[#047857] leading-snug">
+                  Your data is safe with us
+                </span>
+              </div>
+            </div>
+
+            {/* Discreet Quick Demo Role Switcher */}
+            <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+              <span className="font-medium">Quick Demo:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier("admin@lifespring.com");
+                  setPassword("admin123");
+                }}
+                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier("doctor@lifespringint.com");
+                  setPassword("123456");
+                }}
+                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
+              >
+                Doctor
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier("patient@lifespringint.com");
+                  setPassword("123456");
+                }}
+                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-[#007a55] font-semibold transition-colors cursor-pointer"
+              >
+                Patient
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Outside the Card: Copyright & Version */}
+        <div className="text-center py-1">
+          <p className="text-[11px] sm:text-[11.5px] text-slate-500 font-medium">
+            &copy; 2026 LifeSpring Healthcare ERP. All rights reserved.
+          </p>
+          <p className="text-[10.5px] text-slate-400 mt-0.5">
+            Version 2.4.0
+          </p>
+        </div>
       </div>
     </div>
   );

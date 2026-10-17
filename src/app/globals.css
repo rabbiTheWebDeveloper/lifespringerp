@@ -128,3 +128,15 @@
     @apply font-sans;
   }
 }
+
+.font-serif-display {
+  font-family: var(--font-serif-display), "Playfair Display", Georgia, serif;
+}
+
+.font-handwriting {
+  font-family: var(--font-handwriting), "Caveat", cursive;
+}
+
+.font-sans-clean {
+  font-family: var(--font-sans-clean), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}

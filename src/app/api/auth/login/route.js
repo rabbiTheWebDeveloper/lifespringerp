@@ -67,6 +67,7 @@ export async function POST(request) {
       const demoMatch = demoAccounts.find(
         (a) =>
           a.email.toLowerCase() === cleanIdentifier ||
+          a.email.replace("@lifespringint.com", "@lifespring.com").toLowerCase() === cleanIdentifier ||
           a.phone === cleanIdentifier ||
           cleanIdentifier === a.role
       );
